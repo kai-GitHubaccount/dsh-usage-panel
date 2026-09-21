@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2
+
+- Packaging: declare `dsh.bundle` (with `cordis.patch.yml`) so
+  `dsh plugin --profile web add dsh-usage-panel` installs it as a profile
+  bundle, as required by community plugin lists.
+- Docs: add a preview screenshot, a Simplified Chinese README, and an English
+  README.
+
 ## 0.3.1
 
 - Fix: prefer the session header seat; the sidebar seat is now a delayed (4s)

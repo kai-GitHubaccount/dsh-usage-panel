@@ -1,96 +1,70 @@
 # dsh-usage-panel
 
-DeepSeek account balance + per-session token usage for the DSH web GUI,
-rendered as a colored pill in the conversation session header (top right).
+[English](README.en.md) | **简体中文**
 
-## Features
+为 [DSH（DeepSeek Harness）](https://github.com/deepseek-ai/deepseek-harness) Web 界面提供 **DeepSeek 账户余额**与**本会话 Token 用量**，以彩色胶囊显示在会话头部右侧。
 
-- Balance from the official DeepSeek Get User Balance endpoint.
-- Per-session token usage from the host tokenUsage projection (uncached input
-  / cache read / cache write / output / total / cache-hit rate).
-- Three balance levels with colors, driven by user thresholds:
-  sufficient (>= warnAt), warning (>= criticalAt), insufficient (< criticalAt).
-- Editable thresholds, refresh interval, open mode, and recharge/usage URLs,
-  persisted per browser in localStorage.
-- Recharge entry with three open modes (new tab / same tab / copy link) and
-  quick links to the DeepSeek top-up, usage, and sign-in pages. Opening the
-  top-up page reuses the browser's existing platform.deepseek.com login.
-- Efficiency: visibility-aware polling (paused on hidden tabs), exponential
-  backoff on failure, a server-side cache with single-flight, manual refresh.
+![面板预览](assets/preview.png)
 
-## Layout
+## 功能
 
-- lib/index.js  host half: authenticated balance route, dependency free.
-- lib/client.js browser half: hand-written window.__ModuleLoader__ bundle.
-- install.mjs   idempotent installer for any DSH home/profile.
-- tools/verify.mjs doctor: boot graph, HMR channel, served bundle features.
+- **余额**：官方 `GET /user/balance`，显示总额 / 充值 / 赠送。
+- **Token 用量**：读取宿主 `tokenUsage` 投影，显示未缓存输入 / 缓存命中 / 缓存写入 / 输出 / 合计 / 缓存命中率。
+- **三级余额预警**（阈值可自定义）：充足 / 警告 / 不足，胶囊与卡片颜色随之变化。
+- **充值入口**：去充值 / 用量明细 / 登录平台 / 复制链接；支持新标签、当前标签、复制链接三种打开方式。
+- **查询效率**：仅在页面可见时轮询（隐藏暂停）、失败指数退避、宿主 30s 缓存 + 单飞、手动刷新。
+- **跨版本兼容**：宿主端优先 `ctx.connection.fetch` 并回退 `ctx.webServer`；浏览器端依次尝试会话头部插槽。
 
-## Install
+## 安装
 
-    node install.mjs --home ~/.dsh --profile web
+方式一：作为插件包安装（推荐）
 
-It copies this package to <home>/plugins/dsh-usage-panel and ensures the
-profile patch inserts it. Restart `dsh web` (or let the live patch watcher
-apply it) and refresh the GUI.
+```sh
+dsh plugin --profile web add dsh-usage-panel
+```
 
-Manual install: add this to <home>/profiles/web/cordis.patch.yml
+方式二：本地安装脚本
 
-    - insert:
-        - id: usage-panel
-          name: /absolute/path/to/dsh-usage-panel/lib/index.js
+```sh
+node install.mjs --home ~/.dsh --profile web
+```
 
-## Configuration (host)
+重启 `dsh web`（或等待热重载）后刷新页面。
 
-apply(ctx, config) reads an optional config object from the patch row:
+## 配置（宿主端）
 
-| Field | Default | Meaning |
-|---|---|---|
-| routePath | /api/usage-panel/balance | route served by the host half |
-| cacheMs | 30000 | upstream cache and single-flight window |
-| apiKeyEnv | DEEPSEEK_API_KEY | resolved via ctx.credentials, then env |
-| baseUrl | https://api.deepseek.com | provider base URL |
-| baseUrlEnv | DEEPSEEK_BASE_URL | env var overriding baseUrl |
+`apply(ctx, config)` 可读取 patch 行中的可选配置：
 
-## Compatibility
+| 字段 | 默认值 | 说明 |
+| --- | --- | --- |
+| `routePath` | `/api/usage-panel/balance` | 宿主端路由 |
+| `cacheMs` | `30000` | 上游缓存与单飞窗口 |
+| `apiKeyEnv` | `DEEPSEEK_API_KEY` | 经 `ctx.credentials` 解析，再回退环境变量 |
+| `baseUrl` | `https://api.deepseek.com` | 服务商地址 |
+| `baseUrlEnv` | `DEEPSEEK_BASE_URL` | 覆盖 `baseUrl` 的环境变量 |
 
-- Host: Node >= 18 (global fetch / Response), no imports, so it loads from
-  any path. Prefers ctx.connection.fetch.register and falls back to
-  ctx.webServer.register. Key resolution uses ctx.credentials when present.
-- Browser: requires only the seeded React module and the slots service.
-  Preferred seat is conversation.session.header.utilities, then
-  conversation.session.header.corner. The sidebar.footer.action seat is a
-  delayed (4s) fallback used only when no header seat materialises, so the
-  pill never pre-empts the header on a normal boot. Token usage needs the
-  session-scoped useProjection hook; without it the balance still renders.
-- No platform-specific code, so it is machine independent.
+## 兼容性
 
-## Verify
+- **宿主端**：Node >= 18，零 `import`，可从任意路径加载；优先 `ctx.connection.fetch.register`，回退 `ctx.webServer.register`；密钥优先走 `ctx.credentials`。
+- **浏览器端**：仅依赖内置 React 与 `slots` 服务；优先 `conversation.session.header.utilities`，其次 `conversation.session.header.corner`，`sidebar.footer.action` 为延迟 4 秒的兜底，因此正常启动不会跑到左下角；缺少 `useProjection` 时仍显示余额。
+- 纯 JS、无平台相关代码，跨机型通用。
 
-    node tools/verify.mjs --port 3080 --home ~/.dsh
+## 自检
 
-Reports boot-graph presence, the HMR channel, and the served bundle features.
+```sh
+node tools/verify.mjs --port 3080 --home ~/.dsh
+```
 
-## Publish to GitHub
+输出启动图、HMR 通道与服务包特性。
 
-    cd <this-directory>
-    git init
-    git add -A
-    git commit -m 'dsh-usage-panel 0.3.1'
-    git branch -M main
-    git remote add origin git@github.com:<you>/dsh-usage-panel.git
-    git push -u origin main
+## 卸载
 
-Then add the repository topics deepseek-harness-plugins, deepseek-harness,
-and dsh-plugin so it shows up under the community topic pages.
+删除 profile patch 中的 `usage-panel` 行，并删除 `<home>/plugins/dsh-usage-panel`。
 
-The .gitignore excludes the runtime .state.json marker, so the repository
-holds only source.
-
-## Author
+## 作者
 
 Mysterious Mark
 
-## Uninstall
+## 许可
 
-Remove the usage-panel insert row from the profile patch and delete
-<home>/plugins/dsh-usage-panel.
+[MIT](LICENSE)

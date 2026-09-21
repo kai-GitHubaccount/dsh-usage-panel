@@ -1,0 +1,9 @@
+# dsh-usage-panel bundle patch.
+#
+# Applied when this package is installed as a profile bundle, e.g.:
+#   dsh plugin --profile web add dsh-usage-panel
+# The bare package name resolves from the profile's node_modules.
+
+- insert:
+    - id: usage-panel
+      name: 'dsh-usage-panel'

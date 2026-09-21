@@ -1,6 +1,6 @@
 {
   "name": "dsh-usage-panel",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "DeepSeek account balance + per-session token usage for the DSH web GUI: three-level balance alert, editable thresholds, recharge entry, version-tolerant.",
   "type": "module",
   "main": "lib/index.js",
@@ -13,7 +13,9 @@
     "lib",
     "tools",
     "install.mjs",
+    "cordis.patch.yml",
     "README.md",
+    "README.en.md",
     "LICENSE",
     "CHANGELOG.md"
   ],
@@ -46,6 +48,9 @@
     "url": "https://github.com/kai-GitHubaccount/dsh-usage-panel/issues"
   },
   "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web"
     }
