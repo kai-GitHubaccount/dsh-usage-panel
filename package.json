@@ -37,6 +37,14 @@
   ],
   "license": "MIT",
   "author": "Mysterious Mark",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kai-GitHubaccount/dsh-usage-panel.git"
+  },
+  "homepage": "https://github.com/kai-GitHubaccount/dsh-usage-panel#readme",
+  "bugs": {
+    "url": "https://github.com/kai-GitHubaccount/dsh-usage-panel/issues"
+  },
   "dsh": {
     "client": {
       "platform": "web"
