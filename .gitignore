@@ -1,0 +1,7 @@
+node_modules/
+
+# Runtime diagnostic marker written by the host half
+.state.json
+
+*.log
+.DS_Store
